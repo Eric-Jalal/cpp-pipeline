@@ -2,9 +2,9 @@ name: Build pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build-test-push:
@@ -16,13 +16,9 @@ jobs:
       uses: docker/setup-buildx-action@v1
 
     - name: Build Docker image
-      run: docker build . -t jerilok/cpp-build-test:${{ github.sha }}
-
-    - name: Run Tests
-      run: docker run --name test_container jerilok/cpp-build-test:${{ github.sha }}
-
-    - name: Generate Coverage Report
       run: |
+        docker build . -t jerilok/cpp-build-test:${{ github.sha }}
+        docker run --name test_container jerilok/cpp-build-test:${{ github.sha }}
         docker cp test_container:/usr/src/app/coverage.info .
         docker cp test_container:/usr/src/app/out ./coverage_report
 
