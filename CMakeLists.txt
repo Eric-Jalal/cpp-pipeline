@@ -37,6 +37,7 @@ option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 
 # Enable coverage report
 if(ENABLE_COVERAGE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 

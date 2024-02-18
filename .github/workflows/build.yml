@@ -11,21 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
     
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v3
 
-    - name: Build Docker image
+    - name: Set up gcov and lcov
       run: |
-        docker build . -t jerilok/cpp-build-test:${{ github.sha }}
-        docker run --name test_container jerilok/cpp-build-test:${{ github.sha }}
-        docker cp test_container:/usr/src/app/coverage.info .
-        docker cp test_container:/usr/src/app/out ./coverage_report
+        pip install gcovr
+
+    - name: Run tests
+      run: |
+        cmake -DENABLE_COVERAGE=ON . make
+
+    - name: Generate gcovr report
+      run: |
+        mkdir coverage_report/
+        gcovr --root . --html --html-details -o coverage_report/coverage.html
 
     - uses: actions/upload-artifact@v4
       with:
         retention-days: 1
-        if-no-files-found: warn
+        if-no-files-found: error
         name: coverage-report
         path: coverage_report/
 
@@ -42,4 +52,26 @@ jobs:
         build-args: GIT_COMMIT=${{ github.sha }}
         tags: jerilok/cpp-build-test:${{ github.sha }}
 
+  create-release:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Release Drafter
+      uses: release-drafter/release-drafter@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
+        body: "New release ${GITHUB_REF_NAME}"
 
