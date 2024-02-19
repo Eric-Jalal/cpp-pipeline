@@ -16,36 +16,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Generate list of merges
-      id: get-merges
-      run: |
-        git fetch --prune --unshallow
-        LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-        echo "Latest tag: $LATEST_TAG"
-        if [[ -z "$LATEST_TAG" ]]; then
-          MERGES=$(git log --merges --pretty=format:"- %b")
-        else
-          MERGES=$(git log $LATEST_TAG..HEAD --merges --pretty=format:"- %b")
-        fi
-        if [[ -z "$MERGES" ]]; then
-          echo "No new merges to release."
-          echo "merges=No new merges since last release." >> $GITHUB_ENV
-        else
-          echo "merges<<EOF" >> $GITHUB_ENV
-          echo "$MERGES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        fi
-        # This could be moved to a separate github action for clarity
-    - name: Create Release
-      if: env.merges != 'No new merges since last release.'
-      uses: softprops/action-gh-release@v1
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
       with:
-        tag_name: ${{ github.run_number }}
-        name: Release ${{ github.run_number }}
-        body: |
-          ${{ env.merges }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create a GitHub release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.tag_version.outputs.new_tag }}
+        name: Release ${{ steps.tag_version.outputs.new_tag }}
+        body: ${{ steps.tag_version.outputs.changelog }}
 
