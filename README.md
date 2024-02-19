@@ -71,6 +71,13 @@ This project uses GitHub Actions for continuous integration and deployment. The 
 
 The pipeline configuration can be found in `.github/workflows/build.yml`.
 
+### Workflow
+
+- Make changes and push them into default branch `develop`
+- Create a PR so `build.yml` will be triggered
+- If successful, merge it into `main` branch
+- Merge into main branch does automatically treigger `release-create` workflow
+
 ## License
 
 This project uses the following license: `LICENSE`.
