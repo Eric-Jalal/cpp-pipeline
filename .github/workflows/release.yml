@@ -21,7 +21,16 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    # Some programmers use env matrix but this case it is just two repeated variable and I decided to keep it simple
+    - name: Set up compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-10 g++-10
+
     - name: Build release version
+      env:
+        CC: gcc-10
+        CXX: g++-10
       run: |
         sudo apt-get install -y cmake
         cmake . && make
@@ -46,5 +55,5 @@ jobs:
         tag: ${{ steps.tag_version.outputs.new_tag }}
         name: Release ${{ steps.tag_version.outputs.new_tag }}
         body: ${{ steps.tag_version.outputs.changelog }}
-        artifacts: "/usr/src/app/main"
+        artifacts: "main"
 
