@@ -1,15 +1,20 @@
-FROM gcc:9.5.0
+FROM gcc:9.5.0 as builder
 
 ARG GIT_COMMIT=unspecified
-LABEL org.mybigcompany=$GIT_COMMIT
+LABEL build.org.mybigcompany=$GIT_COMMIT
 
 WORKDIR /usr/src/app
 
 COPY . .
 
-RUN apt-get update && apt-get install -y cmake lcov
+RUN apt-get update && apt-get install -y cmake
 
 RUN cmake . && make
 
-CMD ["./main"]
+FROM debian:buster-slim
 
+COPY --from=builder /usr/src/app/main /usr/app/main
+
+WORKDIR /usr/app
+
+CMD ["./main"]
