@@ -6,15 +6,13 @@ on:
       - main
 
 jobs:
-  release-notes:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
     - name: Bump version and push tag
       id: tag_version
@@ -27,6 +25,7 @@ jobs:
 
     - name: Build release version
       run: |
+        apt-get install -y cmake \
         cmake . && make
 
     - name: Login to Docker Hub
