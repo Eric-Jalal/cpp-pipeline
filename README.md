@@ -65,11 +65,31 @@ To build and run the project inside a Docker container, use the provided `Docker
 2. Run the Docker container:
 `docker run helloworld`
 
+## Docker Key Points:
+Multi-Stage Build: This Dockerfile utilizes a two-stage build process. The first stage, named builder, is based on gcc:9.5.0 and is used for compiling the application. The second stage uses a smaller base image (debian:buster-slim in this example) for running the application.
+
+COPY --from=builder: This command copies the compiled application from the builder stage into the second stage. Adjust the source and destination paths according to where your build system outputs the compiled binaries.
+
+Reducing Image Size: The final image does not include the C++ compiler, CMake, or source code, significantly reducing its size.
+
+### Considerations:
+
+Base Image for Runtime: The choice of debian:buster-slim is a balance between size and compatibility. Depending on your application's dependencies, you might opt for another image like alpine for an even smaller footprint. However, ensure that your application and its runtime dependencies are fully compatible with the chosen base image.
+
+Runtime Dependencies: If your application requires additional runtime libraries, you may need to install these in the second stage. Use the apt-get or equivalent package manager commands to install these dependencies, and remember to clean up the cache afterwards to keep the image size small.
+
 ## CI/CD Pipeline
 
 This project uses GitHub Actions for continuous integration and deployment. The CI/CD pipeline automates the process of building the project, running tests, generating coverage reports, and pushing the Docker image to Docker Hub.
 
 The pipeline configuration can be found in `.github/workflows/build.yml`.
+
+## Release process
+
+After the merge as it is explained below, the project is getting archived and pushed to Github Release artifacts. That includes all the source codes.
+This is not correct and is subjected to a change. But it is not breaking the normal flow because it does push the SHA labeled image to HUB.
+Later on we better to change it so it follows a git flow and in a separate stage push the image labled as `latest` and create the release artifactt only containing the `/usr/src/app/main` .
+
 
 ### Workflow
 
